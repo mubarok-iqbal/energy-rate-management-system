@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SeasonDateSeeder::class,
             FixedHolidaySeeder::class,
             MoveableHolidaySeeder::class,
+            TimeTypeSeeder::class,
         ]);
     }
 }
