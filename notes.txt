@@ -1,0 +1,5 @@
+Akan diberikan suatu datetime, maka akan ditentukan :
+  1. apakah tanggal tersebut termasuk public holiday?
+      1.1 jika iya, apakah termasuk holiday yang fixed atau moveable
+  2. Season apakah tanggal tersebut ? summer atau winter?
+  3. Apakah menit tersebut masuk ke dalam interval category?
