@@ -18,7 +18,7 @@
                 <th>Customer Name</th>
                 <th>Start Time</th>
                 <th>End Time</th>
-                <th>Usage</th>
+                <th>Usage (kWH)</th>
             </tr>
         </thead>
         <tbody>

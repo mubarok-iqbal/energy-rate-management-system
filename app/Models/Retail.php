@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Retail extends Model
 {
     use HasFactory;
+
+    public function ratePlans()
+    {
+        return $this->hasMany(RatePlan::class);
+    }
 }

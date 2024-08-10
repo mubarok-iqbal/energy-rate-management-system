@@ -31,7 +31,7 @@ class RatePlanSeeder extends Seeder
                 [
                     'retail_id' => $retail->id,
                     'name' => 'Premium Plan - Retail ' .  $retail->id,
-                    'is_active' => true,
+                    'is_active' => false,
                     'description' => $retail->name . 'Premium Plan',
                     'created_at' => now(),
                     'updated_at' => now(),

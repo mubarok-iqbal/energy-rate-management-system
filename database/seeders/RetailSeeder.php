@@ -22,7 +22,8 @@ class RetailSeeder extends Seeder
         Retail::create([
             'name' => 'Power Solutions',
             'contact_info' => 'info@powersolutions.com',
-            'address' => '456 Power Avenue, Bandung'
+            'address' => '456 Power Avenue, Bandung',
+            'is_active' => false
         ]);
     }
 }

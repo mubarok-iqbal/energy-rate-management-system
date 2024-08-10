@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class CalculationRatePlan extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
 }
