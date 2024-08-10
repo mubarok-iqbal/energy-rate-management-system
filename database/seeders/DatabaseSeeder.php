@@ -15,14 +15,15 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RetailSeeder::class,
-            RatePlanSeeder::class,
-            ChargeCategorySeeder::class,
             SeasonSeeder::class,
             SeasonDateSeeder::class,
             FixedHolidaySeeder::class,
             MoveableHolidaySeeder::class,
-            TimeTypeSeeder::class,
+            RetailSeeder::class,
+            RatePlanSeeder::class,
+            ChargeCategorySeeder::class,
+            CalculationTypeSeeder::class,
+            // ChargeSubCategorySeeder::class
         ]);
     }
 }
