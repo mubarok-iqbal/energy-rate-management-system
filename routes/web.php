@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\ConsumptionController;
+
+Route::get('/', [ConsumptionController::class, 'index'])->name('consumption.index');
+Route::get('/calculate', [ConsumptionController::class, 'index'])->name('calculate.usage');

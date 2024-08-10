@@ -14,7 +14,7 @@ class ConsumptionSeeder extends Seeder
     public function run(): void
     {
         $customers = DB::table('customers')->pluck('id'); // Ambil semua customer_id
-        $start = Carbon::create(2024, 7, 1, 0, 0, 0); // Awal Juli 2024
+        $start = Carbon::create(2024, 1, 1, 0, 0, 0); // Awal Januari 2024
         $end = Carbon::create(2024, 8, 1, 0, 0, 0); // Awal Agustus 2024
 
         foreach ($customers as $customer_id) {
