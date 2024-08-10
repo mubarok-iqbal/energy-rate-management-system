@@ -18,12 +18,12 @@ class PeriodDetailSeeder extends Seeder
 
         $retail_2_peek = DB::table('periods')->where('retail_id', 2)->where('name' , 'peek')->first();
         $retail_2_off_peek = DB::table('periods')->where('retail_id', 2)->where('name' , 'off peek')->first();
-        $retail_2_off_peek = DB::table('periods')->where('retail_id', 2)->where('name' , 'shoulder')->first();
+        $retail_2_shoulder = DB::table('periods')->where('retail_id', 2)->where('name' , 'shoulder')->first();
 
         //Retail 1 peek
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_1_peek,
+                'period_id' => $retail_1_peek->id,
                 'days' => json_encode(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
                 'start_time' => '14:00:01',
                 'end_time' => '20:00:00',
@@ -33,7 +33,7 @@ class PeriodDetailSeeder extends Seeder
         //Retail 1 off peek
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_1_off_peek,
+                'period_id' => $retail_1_off_peek->id,
                 'days' => json_encode(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
                 'start_time' => '20:00:01',
                 'end_time' => '14:00:00',
@@ -42,7 +42,7 @@ class PeriodDetailSeeder extends Seeder
 
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_1_off_peek,
+                'period_id' => $retail_1_off_peek->id,
                 'days' => json_encode(['Saturday', 'Sunday']),
                 'start_time' => '00:00:01',
                 'end_time' => '24:00:00',
@@ -52,7 +52,7 @@ class PeriodDetailSeeder extends Seeder
         //Retail 2 peek
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_2_peek,
+                'period_id' => $retail_2_peek->id,
                 'days' => json_encode(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
                 'start_time' => '13:00:01',
                 'end_time' => '18:00:00',
@@ -62,7 +62,7 @@ class PeriodDetailSeeder extends Seeder
         //Retail 2 shoulder
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_2_shoulder,
+                'period_id' => $retail_2_shoulder->id,
                 'days' => json_encode(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
                 'start_time' => '18:00:01',
                 'end_time' => '20:00:00',
@@ -72,7 +72,7 @@ class PeriodDetailSeeder extends Seeder
         //Retail 2 off peek
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_2_off_peek,
+                'period_id' => $retail_2_off_peek->id,
                 'days' => json_encode(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
                 'start_time' => '20:00:01',
                 'end_time' => '13:00:00',
@@ -81,7 +81,7 @@ class PeriodDetailSeeder extends Seeder
 
         DB::table('period_details')->insert([
             [
-                'period_id' => $retail_2_off_peek,
+                'period_id' => $retail_2_off_peek->id,
                 'days' => json_encode(['Saturday', 'Sunday']),
                 'start_time' => '00:00:01',
                 'end_time' => '24:00:00',

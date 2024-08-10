@@ -21,9 +21,7 @@ class PeriodSeeder extends Seeder
 
         // Retail 2 periods
         DB::table('periods')->insert([
-            ['retail_id' => 2, 'name' => 'peek 1'],
-            ['retail_id' => 2, 'name' => 'peek 2'],
-            ['retail_id' => 2, 'name' => 'peek 3'],
+            ['retail_id' => 2, 'name' => 'peek'],
             ['retail_id' => 2, 'name' => 'off peek'],
             ['retail_id' => 2, 'name' => 'shoulder'],
         ]);
