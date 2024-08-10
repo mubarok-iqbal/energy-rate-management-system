@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ChargeCategory;
 use App\Models\MoveableHoliday;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
             CalculationTypeSeeder::class,
             PeriodSeeder::class,
             PeriodDetailSeeder::class,
+            ChargeSubCategorySeeder::class,
         ]);
     }
 }
