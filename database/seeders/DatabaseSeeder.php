@@ -23,7 +23,8 @@ class DatabaseSeeder extends Seeder
             RatePlanSeeder::class,
             ChargeCategorySeeder::class,
             CalculationTypeSeeder::class,
-            // ChargeSubCategorySeeder::class
+            PeriodSeeder::class,
+            PeriodDetailSeeder::class,
         ]);
     }
 }
