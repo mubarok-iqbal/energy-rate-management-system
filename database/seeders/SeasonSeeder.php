@@ -15,5 +15,7 @@ class SeasonSeeder extends Seeder
     {
         Season::create(['name' => 'Summer']);
         Season::create(['name' => 'Winter']);
+        Season::create(['name' => 'Autumn']);
+        Season::create(['name' => 'Spring']);
     }
 }

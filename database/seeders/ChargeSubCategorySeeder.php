@@ -79,7 +79,7 @@ class ChargeSubCategorySeeder extends Seeder
 
         $summerDemand = ChargeSubCategory::create([
             'charge_category_id' => 4,
-            'name' => 'Summer Demand (KW/Mth)',
+            'name' => 'Winter Demand (KW/Mth)',
             'calculation_type_id' => $fixPerMonth->id,
             'season_id' => 2,
             'period_id' => null,

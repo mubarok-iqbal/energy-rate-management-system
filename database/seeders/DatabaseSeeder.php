@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             PeriodSeeder::class,
             PeriodDetailSeeder::class,
             ChargeSubCategorySeeder::class,
+            CustomerSeeder::class
         ]);
     }
 }
