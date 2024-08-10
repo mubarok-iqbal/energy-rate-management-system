@@ -34,7 +34,10 @@ class CalculationService
             // Langkah 3: Tentukan musim yang berlaku
             $season = $this->getSeasonForDateRange($startDate, $endDate);
 
-            // Langkah 4: Insert data ke tabel calculation_rate_plans
+            // Langkah 4: Ambil hari libur
+            $holidays = $this->getHolidays($startDate, $endDate);
+            dd($season , $holidays);
+            // Langkah 5: Insert data ke tabel calculation_rate_plans
             foreach ($activeRetails as $retail) {
                 // Ambil rate plans yang aktif dari retail
                 $activeRatePlans = $retail->ratePlans->where('is_active', true);
@@ -56,7 +59,7 @@ class CalculationService
                         ->flatMap(function ($chargeCategory) use ($season) {
                             return $chargeCategory->chargeSubCategories->filter(function ($subChargeCategory) use ($season) {
                                 return $subChargeCategory->is_active &&
-                                       (!$subChargeCategory->season_id || $subChargeCategory->season_id == $season->id);
+                                    (!$subChargeCategory->season_id || $subChargeCategory->season_id == $season->id);
                             });
                         });
 
@@ -79,6 +82,7 @@ class CalculationService
         }
     }
 
+
     protected function getSeasonForDateRange(string $startDate, string $endDate)
     {
         $start = Carbon::parse($startDate);
@@ -96,4 +100,29 @@ class CalculationService
             });
         })->first();
     }
+
+    protected function getHolidays(string $startDate, string $endDate)
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+
+        // Ambil fixed holidays
+        $fixedHolidays = DB::table('fixed_holidays')
+            ->get()
+            ->map(function ($holiday) use ($start, $end) {
+                $date = Carbon::create($start->year, $holiday->month, $holiday->day);
+                return $date->between($start, $end) ? $date->format('Y-m-d') : null;
+            })
+            ->filter() // Hapus nilai null
+            ->values();
+
+        // Ambil moveable holidays
+        $moveableHolidays = DB::table('moveable_holidays')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->pluck('date');
+
+        // Gabungkan dan urutkan semua tanggal libur
+        return $fixedHolidays->merge($moveableHolidays)->unique()->sort()->values();
+    }
+
 }
