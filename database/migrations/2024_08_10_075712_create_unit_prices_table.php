@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('threshold_details', function (Blueprint $table) {
+        Schema::create('unit_prices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('retail_id')->constrained()->onDelete('cascade');
-            $table->string('name');
+            $table->foreignId('charge_sub_category_id')->constrained()->onDelete('cascade');
+            $table->float('threshold')->default(0);
+            $table->float('price');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('threshold_details');
+        Schema::dropIfExists('unit_prices');
     }
 };
