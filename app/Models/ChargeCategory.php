@@ -21,8 +21,8 @@ class ChargeCategory extends Model
         return $this->belongsTo(RatePlan::class);
     }
 
-    public function subChargeCategories()
+    public function chargeSubCategories()
     {
-        return $this->hasMany(SubChargeCategory::class);
+        return $this->hasMany(ChargeSubCategory::class);
     }
 }

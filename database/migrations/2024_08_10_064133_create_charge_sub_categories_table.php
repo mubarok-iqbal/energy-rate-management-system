@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('calculation_type_id')->constrained()->onDelete('cascade');
             $table->foreignId('season_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('period_id')->nullable()->constrained()->onDelete('cascade');
-            $table->boolean('is_active')->default(true);
             $table->float('loss_factor')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

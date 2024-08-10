@@ -9,10 +9,8 @@ class Season extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['season_id', 'start_date', 'end_date'];
-
-    public function season()
+    public function seasonDates()
     {
-        return $this->belongsTo(Season::class);
+        return $this->hasMany(SeasonDate::class);
     }
 }

@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class SeasonDate extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['season_id', 'start_date', 'end_date'];
+
+    public function season()
+    {
+        return $this->belongsTo(Season::class);
+    }
 }
