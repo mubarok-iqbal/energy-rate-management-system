@@ -66,7 +66,14 @@
         <div class="alert alert-warning" role="alert">
             No calculation results found.
         </div>
+
+        <!-- Tombol Back -->
     @endif
+    <div class="mt-4">
+        <a href="{{ url('/') }}" class="btn btn-success">
+            Back
+        </a>
+    </div>
 </div>
 @endsection
 
