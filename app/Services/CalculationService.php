@@ -71,20 +71,8 @@ class CalculationService
 
                     foreach ($chargeSubCategories as $chargeSubCategory) {
                         if ($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_DAY) {
-                            // Insert ke tabel calculations
-                            $calculation = Calculation::firstOrCreate(
-                                [
-                                    'calculation_rate_plan_id' => $calculationRatePlan->id,
-                                    'charge_sub_category_id' => $chargeSubCategory->id,
-                                ],
-                                [
-                                    'total_usage' => 0,
-                                    'total_price' => 0,
-                                ]
-                            );
-
                             // Calculate FIX_PER_DAY
-                            $this->calculateFixPerDay($calculation, $hourlyConsumptions);
+                            $this->calculateFixPerDay($calculationRatePlan , $chargeSubCategory , $startDate , $endDate);
                         }
                     }
                 }
@@ -213,7 +201,7 @@ class CalculationService
         return $hourlyConsumptions;
     }
 
-    protected function calculateFixPerDay($calculation, $hourlyConsumptions)
+    protected function calculateFixPerDay2($calculation, $hourlyConsumptions)
     {
         // Retrieve the charge sub category and unit prices
         $chargeSubCategory = $calculation->chargeSubCategory;
@@ -271,4 +259,30 @@ class CalculationService
         $calculation->save();
     }
 
+    protected function calculateFixPerDay($calculationRatePlan, $chargeSubCategory, $startDate, $endDate)
+    {
+        // Convert startDate and endDate to Carbon instances
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        // Calculate the total usage as the difference in days plus one
+        $totalUsage = $startDate->diffInDays($endDate) + 1;
+
+        // Retrieve the first unit price
+        $unitPrice = $chargeSubCategory->unitPrices->first()->price;
+
+        // Create or update the calculation record
+        $calculation = Calculation::firstOrCreate(
+            [
+                'calculation_rate_plan_id' => $calculationRatePlan->id,
+                'charge_sub_category_id' => $chargeSubCategory->id,
+            ],
+            [
+                'total_usage' => $totalUsage,
+                'total_price' => $totalUsage * $unitPrice,
+            ]
+        );
+
+        return $calculation;
+    }
 }

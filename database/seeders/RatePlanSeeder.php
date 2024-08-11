@@ -22,7 +22,7 @@ class RatePlanSeeder extends Seeder
             DB::table('rate_plans')->insert([
                 [
                     'retail_id' => $retail->id,
-                    'name' => 'Standard Plan - Retail ' . $retail->id,
+                    'name' => 'Standard Plan',
                     'is_active' => true,
                     'description' => $retail->name . 'Standard Plan',
                     'created_at' => now(),
@@ -30,7 +30,7 @@ class RatePlanSeeder extends Seeder
                 ],
                 [
                     'retail_id' => $retail->id,
-                    'name' => 'Premium Plan - Retail ' .  $retail->id,
+                    'name' => 'Premium Plan',
                     'is_active' => false,
                     'description' => $retail->name . 'Premium Plan',
                     'created_at' => now(),

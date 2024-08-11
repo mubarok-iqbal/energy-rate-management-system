@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CalculationRatePlan;
 use App\Models\Customer;
 use App\Models\Consumption;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use App\Models\CalculationRatePlan;
 use App\Services\CalculationService;
 
 class ConsumptionController extends Controller
@@ -48,6 +49,8 @@ class ConsumptionController extends Controller
 
     public function getCalculation($customerId, $startDate, $endDate)
     {
+        $customer = Customer::find($customerId);
+
         $calculationRatePlan = CalculationRatePlan::where('customer_id', $customerId)
             ->where('start_date', $startDate)
             ->where('end_date', $endDate)
@@ -61,6 +64,9 @@ class ConsumptionController extends Controller
                 return $ratePlan;
             });
 
-        return view('calculation.result', compact('calculationRatePlan'));
+        $startDate = Carbon::parse($startDate)->translatedFormat('d F Y');
+        $endDate = Carbon::parse($endDate)->translatedFormat('d F Y');
+
+        return view('calculation.result', compact('calculationRatePlan' , 'customer' , 'startDate' , 'endDate'));
     }
 }
