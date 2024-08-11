@@ -3,14 +3,15 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use App\Models\Retail;
-use App\Models\Season;
-use App\Models\Calculation;
-use App\Models\Consumption;
-use App\Models\CalculationType;
-use App\Models\ChargeSubCategory;
 use Illuminate\Support\Facades\DB;
+use App\Models\Calculation;
+use App\Models\Retail;
+use App\Models\Consumption;
+use App\Models\Season;
 use App\Models\CalculationRatePlan;
+use App\Models\ChargeSubCategory;
+use App\Models\CalculationType;
+use Illuminate\Database\Eloquent\Collection;
 
 class CalculationService
 {
@@ -49,12 +50,14 @@ class CalculationService
                     $ratePlanId = $ratePlan->id;
 
                     // Insert ke tabel calculation_rate_plans
-                    $calculationRatePlan = CalculationRatePlan::create([
-                        'customer_id' => $customerId,
-                        'rate_plan_id' => $ratePlanId,
-                        'start_date' => $startDate,
-                        'end_date' => $endDate,
-                    ]);
+                    $calculationRatePlan = CalculationRatePlan::firstOrCreate(
+                        [
+                            'customer_id' => $customerId,
+                            'rate_plan_id' => $ratePlanId,
+                            'start_date' => $startDate,
+                            'end_date' => $endDate,
+                        ]
+                    );
 
                     // Ambil ChargeSubCategories yang aktif untuk ratePlan ini
                     $chargeSubCategories = $ratePlan->chargeCategories
@@ -67,9 +70,21 @@ class CalculationService
                         });
 
                     foreach ($chargeSubCategories as $chargeSubCategory) {
+                        if ($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_DAY) {
+                            // Insert ke tabel calculations
+                            $calculation = Calculation::firstOrCreate(
+                                [
+                                    'calculation_rate_plan_id' => $calculationRatePlan->id,
+                                    'charge_sub_category_id' => $chargeSubCategory->id,
+                                ],
+                                [
+                                    'total_usage' => 0,
+                                    'total_price' => 0,
+                                ]
+                            );
 
-                        if($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_DAY){
-                            $this->calculateFixPerDay()
+                            // Calculate FIX_PER_DAY
+                            $this->calculateFixPerDay($calculation, $hourlyConsumptions);
                         }
                     }
                 }
@@ -82,7 +97,6 @@ class CalculationService
             throw $e; // Lempar exception lebih lanjut jika diperlukan
         }
     }
-
 
     protected function getSeasonForDateRange(string $startDate, string $endDate)
     {
@@ -199,7 +213,7 @@ class CalculationService
         return $hourlyConsumptions;
     }
 
-    protected function calculateFixDay($calculation, $hourlyConsumptions)
+    protected function calculateFixPerDay($calculation, $hourlyConsumptions)
     {
         // Retrieve the charge sub category and unit prices
         $chargeSubCategory = $calculation->chargeSubCategory;
@@ -223,13 +237,13 @@ class CalculationService
                 $threshold = $unitPrice->threshold;
                 $pricePerUnit = $unitPrice->price;
 
-                // Check if daily usage has reached the threshold
+                // Calculate price based on threshold
                 if ($dailyUsage > $threshold) {
-                    // Calculate price up to the threshold
+                    // Price for usage up to the threshold
                     $usageAtThreshold = $threshold - $previousThreshold;
                     $price += $usageAtThreshold * $pricePerUnit;
 
-                    // Calculate price for usage beyond the threshold
+                    // Update daily usage and previous threshold for the next threshold
                     $dailyUsage -= $usageAtThreshold;
                     $previousThreshold = $threshold;
                 } else {
@@ -240,14 +254,20 @@ class CalculationService
                 }
             }
 
+            // Ensure to add remaining dailyUsage if there are more unitPrices
+            if ($dailyUsage > 0) {
+                $price += $dailyUsage * $pricePerUnit;
+            }
+
             // Update calculation record
-            $calculation->total_usage += $dailyUsage;
+            $calculation->total_usage += $consumptions->sum('usage');
             $calculation->total_price += $price;
 
             // Reset for the next day
             $previousThreshold = 0;
         }
 
+        // Save the updated calculation
         $calculation->save();
     }
 

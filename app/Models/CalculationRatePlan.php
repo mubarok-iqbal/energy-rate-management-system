@@ -10,4 +10,14 @@ class CalculationRatePlan extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function calculations()
+    {
+        return $this->hasMany(Calculation::class);
+    }
+
+    public function ratePlan()
+    {
+        return $this->belongsTo(RatePlan::class);
+    }
 }

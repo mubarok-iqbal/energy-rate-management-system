@@ -10,4 +10,9 @@ class Calculation extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function chargeSubCategory()
+    {
+        return $this->belongsTo(ChargeSubCategory::class);
+    }
 }

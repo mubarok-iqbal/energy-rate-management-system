@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CalculationRatePlan;
 use App\Models\Customer;
 use App\Models\Consumption;
 use Illuminate\Http\Request;
@@ -35,17 +36,31 @@ class ConsumptionController extends Controller
         ]);
 
         // Perform the calculation
-        $calculationId = $this->calculationService->calculate($request->customer_id, $request->start_date, $request->end_date);
+        $this->calculationService->calculate($request->customer_id, $request->start_date, $request->end_date);
 
         // Redirect to the calculation result page
-        return redirect()->route('calculation.result', ['id' => $calculationId]);
+        return redirect()->route('calculation.detail', [
+            'customer_id' => $request->customer_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ]);
     }
 
-    public function calculationResult($id)
+    public function getCalculation($customerId, $startDate, $endDate)
     {
-        $calculation = Calculation::with('details')->findOrFail($id);
-        return view('calculation-result', compact('calculation'));
+        $calculationRatePlan = CalculationRatePlan::where('customer_id', $customerId)
+            ->where('start_date', $startDate)
+            ->where('end_date', $endDate)
+            ->with(['calculations.chargeSubCategory.chargeCategory']) // Eager load relationships
+            ->get()
+            ->map(function ($ratePlan) {
+                // Group calculations by chargeCategory
+                $ratePlan->calculationsGrouped = $ratePlan->calculations->groupBy(function ($calculation) {
+                    return $calculation->chargeSubCategory->chargeCategory->id;
+                });
+                return $ratePlan;
+            });
+
+        return view('calculation.result', compact('calculationRatePlan'));
     }
-
-
 }
