@@ -2,14 +2,15 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Models\Retail;
-use App\Models\CalculationRatePlan;
+use App\Models\Season;
 use App\Models\Calculation;
 use App\Models\Consumption;
+use App\Models\CalculationType;
 use App\Models\ChargeSubCategory;
-use App\Models\Season;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Models\CalculationRatePlan;
 
 class CalculationService
 {
@@ -31,12 +32,14 @@ class CalculationService
                 ->whereBetween('end_time', [$startDate, $endDate])
                 ->get();
 
+            $hourlyConsumptions = $this->generateHourlyConsumption($consumptions);
+
             // Langkah 3: Tentukan musim yang berlaku
             $season = $this->getSeasonForDateRange($startDate, $endDate);
 
             // Langkah 4: Ambil hari libur
             $holidays = $this->getHolidays($startDate, $endDate);
-            dd($season , $holidays);
+
             // Langkah 5: Insert data ke tabel calculation_rate_plans
             foreach ($activeRetails as $retail) {
                 // Ambil rate plans yang aktif dari retail
@@ -63,13 +66,18 @@ class CalculationService
                             });
                         });
 
-                    foreach ($chargeSubCategories as $subChargeCategory) {
+                    foreach ($chargeSubCategories as $sub) {
+
+                        if($sub->calculation_type_id == CalculationType::FIX_PER_DAY){
+                            dd($sub);
+                        }
                         // Insert ke tabel calculations
-                        Calculation::create([
+                        $calculation = Calculation::create([
                             'calculation_rate_plan_id' => $calculationRatePlan->id,
-                            'charge_sub_category_id' => $subChargeCategory->id,
+                            'charge_sub_category_id' => $sub->id,
                             'total_usage' => 0, // Sementara total_usage = 0
                         ]);
+
                     }
                 }
             }
@@ -125,4 +133,58 @@ class CalculationService
         return $fixedHolidays->merge($moveableHolidays)->unique()->sort()->values();
     }
 
+    protected function generateHourlyConsumption($consumptions)
+    {
+        $minuteConsumptions = collect();
+
+        // Langkah 1: Pisahkan data per menit
+        foreach ($consumptions as $consumption) {
+            $start = Carbon::parse($consumption->start_time);
+            $end = Carbon::parse($consumption->end_time);
+            $usage = $consumption->usage;
+
+            // Menentukan total durasi dalam menit
+            $totalDuration = $end->diffInMinutes($start);
+
+            while ($start < $end) {
+                $minuteEnd = $start->copy()->addMinute();
+
+                if ($minuteEnd > $end) {
+                    $minuteEnd = $end;
+                }
+
+                $intervalDuration = $minuteEnd->diffInMinutes($start);
+                $intervalUsage = ($intervalDuration / $totalDuration) * $usage;
+
+                $minuteConsumptions->push([
+                    'start_time' => $start->format('Y-m-d H:i:s'),
+                    'end_time' => $minuteEnd->format('Y-m-d H:i:s'),
+                    'usage' => $intervalUsage,
+                ]);
+
+                $start = $minuteEnd;
+
+                if ($start >= $end) {
+                    break;
+                }
+            }
+        }
+
+        // Langkah 2: Agregasi data per jam
+        $hourlyConsumptions = $minuteConsumptions->groupBy(function ($item) {
+            return Carbon::parse($item['start_time'])->startOfHour()->format('Y-m-d H:00:00');
+        })->map(function ($group) {
+            $startTime = Carbon::parse($group->first()['start_time'])->startOfHour()->format('Y-m-d H:00:00');
+            $endTime = Carbon::parse($group->last()['end_time'])->format('Y-m-d H:i:s');
+            $totalUsage = $group->sum('usage');
+
+            return [
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'usage' => $totalUsage,
+            ];
+        })->values();
+
+        return $hourlyConsumptions;
+    }
 }
