@@ -15,4 +15,9 @@ class ChargeSubCategory extends Model
     {
         return $this->belongsTo(ChargeCategory::class);
     }
+
+    public function unitPrices()
+    {
+        return $this->hasMany(UnitPrice::class);
+    }
 }

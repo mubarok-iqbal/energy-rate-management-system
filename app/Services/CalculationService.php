@@ -66,18 +66,11 @@ class CalculationService
                             });
                         });
 
-                    foreach ($chargeSubCategories as $sub) {
+                    foreach ($chargeSubCategories as $chargeSubCategory) {
 
-                        if($sub->calculation_type_id == CalculationType::FIX_PER_DAY){
-                            dd($sub);
+                        if($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_DAY){
+                            $this->calculateFixPerDay()
                         }
-                        // Insert ke tabel calculations
-                        $calculation = Calculation::create([
-                            'calculation_rate_plan_id' => $calculationRatePlan->id,
-                            'charge_sub_category_id' => $sub->id,
-                            'total_usage' => 0, // Sementara total_usage = 0
-                        ]);
-
                     }
                 }
             }
@@ -185,6 +178,77 @@ class CalculationService
             ];
         })->values();
 
+        // Langkah 3: Menghitung accumulated_usage
+        $dailyAccumulatedUsage = 0;
+        $lastDate = null;
+
+        $hourlyConsumptions = $hourlyConsumptions->map(function ($item) use (&$dailyAccumulatedUsage, &$lastDate) {
+            $currentDate = Carbon::parse($item['start_time'])->format('Y-m-d');
+
+            if ($lastDate !== $currentDate) {
+                $dailyAccumulatedUsage = 0; // Reset daily accumulated usage
+                $lastDate = $currentDate;
+            }
+
+            $dailyAccumulatedUsage += $item['usage'];
+            $item['accumulated_usage'] = $dailyAccumulatedUsage;
+
+            return $item;
+        });
+
         return $hourlyConsumptions;
     }
+
+    protected function calculateFixDay($calculation, $hourlyConsumptions)
+    {
+        // Retrieve the charge sub category and unit prices
+        $chargeSubCategory = $calculation->chargeSubCategory;
+        $unitPrices = $chargeSubCategory->unitPrices->sortBy('threshold');
+
+        // Initialize variables
+        $dailyUsage = 0;
+        $totalPrice = 0;
+        $previousThreshold = 0;
+
+        // Aggregate hourly consumption per day
+        $dailyConsumptions = $hourlyConsumptions->groupBy(function ($item) {
+            return Carbon::parse($item['start_time'])->toDateString();
+        });
+
+        foreach ($dailyConsumptions as $day => $consumptions) {
+            $dailyUsage = $consumptions->sum('usage');
+            $price = 0;
+
+            foreach ($unitPrices as $unitPrice) {
+                $threshold = $unitPrice->threshold;
+                $pricePerUnit = $unitPrice->price;
+
+                // Check if daily usage has reached the threshold
+                if ($dailyUsage > $threshold) {
+                    // Calculate price up to the threshold
+                    $usageAtThreshold = $threshold - $previousThreshold;
+                    $price += $usageAtThreshold * $pricePerUnit;
+
+                    // Calculate price for usage beyond the threshold
+                    $dailyUsage -= $usageAtThreshold;
+                    $previousThreshold = $threshold;
+                } else {
+                    // Price for remaining usage within the threshold
+                    $price += $dailyUsage * $pricePerUnit;
+                    $dailyUsage = 0;
+                    break;
+                }
+            }
+
+            // Update calculation record
+            $calculation->total_usage += $dailyUsage;
+            $calculation->total_price += $price;
+
+            // Reset for the next day
+            $previousThreshold = 0;
+        }
+
+        $calculation->save();
+    }
+
 }
