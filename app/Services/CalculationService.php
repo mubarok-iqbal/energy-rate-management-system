@@ -76,7 +76,7 @@ class CalculationService
                         }
 
                         if ($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_MONTH) {
-                            $this->calculateFixPerMonth($calculationRatePlan , $chargeSubCategory , $hourlyConsumptions);
+                            $this->calculateFixPerMonth($calculationRatePlan , $chargeSubCategory , $hourlyConsumptions,  $startDate , $endDate );
                         }
                     }
                 }
@@ -276,7 +276,7 @@ class CalculationService
         $unitPrice = $chargeSubCategory->unitPrices->first()->price;
 
         // Create or update the calculation record
-        $calculation = Calculation::firstOrCreate(
+        $calculation = Calculation::updateOrCreate(
             [
                 'calculation_rate_plan_id' => $calculationRatePlan->id,
                 'charge_sub_category_id' => $chargeSubCategory->id,
@@ -291,8 +291,13 @@ class CalculationService
         return $calculation;
     }
 
-    protected function calculateFixPerMonth($calculationRatePlan, $chargeSubCategory, $hourlyConsumptions)
+    protected function calculateFixPerMonth($calculationRatePlan, $chargeSubCategory, $hourlyConsumptions ,  $startDate, $endDate)
     {
+
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        $total_days = $startDate->diffInDays($endDate) + 1;
 
         // Find the maximum usage from the hourly consumptions
         $totalUsage = collect($hourlyConsumptions)->max('usage');
@@ -302,14 +307,14 @@ class CalculationService
         $unitPrice = $chargeSubCategory->unitPrices->first()->price;
 
         // Create or update the calculation record
-        $calculation = Calculation::firstOrCreate(
+        $calculation = Calculation::updateOrCreate(
             [
                 'calculation_rate_plan_id' => $calculationRatePlan->id,
                 'charge_sub_category_id' => $chargeSubCategory->id,
             ],
             [
                 'total_usage' => $totalUsage,
-                'total_price' => $totalUsage * $unitPrice,
+                'total_price' => $total_days / 30 * $totalUsage * $unitPrice,
                 'unit_price' => $unitPrice,
             ]
         );
