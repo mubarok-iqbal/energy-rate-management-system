@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Period extends Model
 {
     use HasFactory;
+
+    public function periodDetails()
+    {
+        return $this->hasMany(PeriodDetail::class);
+    }
 }

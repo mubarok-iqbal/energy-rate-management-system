@@ -20,4 +20,9 @@ class ChargeSubCategory extends Model
     {
         return $this->hasMany(UnitPrice::class);
     }
+
+    public function period()
+    {
+        return $this->belongsTo(Period::class);
+    }
 }

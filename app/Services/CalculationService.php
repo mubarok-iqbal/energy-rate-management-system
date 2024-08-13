@@ -3,14 +3,15 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use App\Models\Calculation;
 use App\Models\Retail;
-use App\Models\Consumption;
 use App\Models\Season;
-use App\Models\CalculationRatePlan;
-use App\Models\ChargeSubCategory;
+use App\Models\Calculation;
+use App\Models\Consumption;
 use App\Models\CalculationType;
+use App\Models\ChargeSubCategory;
+use Illuminate\Support\Facades\DB;
+use App\Models\CalculationRatePlan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Collection;
 
 class CalculationService
@@ -34,6 +35,8 @@ class CalculationService
                 ->get();
 
             $hourlyConsumptions = $this->generateHourlyConsumption($consumptions);
+            Log::info('total_usage');
+            Log::info($hourlyConsumptions->sum('usage'));
 
             // Langkah 3: Tentukan musim yang berlaku
             $season = $this->getSeasonForDateRange($startDate, $endDate);
@@ -78,10 +81,14 @@ class CalculationService
                         if ($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_MONTH) {
                             $this->calculateFixPerMonth($calculationRatePlan , $chargeSubCategory , $hourlyConsumptions,  $startDate , $endDate );
                         }
+
+                        if ($chargeSubCategory->calculation_type_id == CalculationType::PERIOD) {
+                            $this->calculatePeriod($calculationRatePlan , $chargeSubCategory , $hourlyConsumptions,  $startDate , $endDate );
+                        }
                     }
                 }
             }
-
+            dd('m');
             DB::commit(); // Commit transaksi jika semua operasi berhasil
 
         } catch (\Exception $e) {
@@ -321,4 +328,52 @@ class CalculationService
 
         return $calculation;
     }
+
+    protected function calculatePeriod($calculationRatePlan, $chargeSubCategory, $hourlyConsumptions, $startDate, $endDate)
+    {
+        $totalUsage = 0;
+        dd($chargeSubCategory->unitPrices);
+        foreach ($hourlyConsumptions as $consumption) {
+            $consumptionStartTime = Carbon::parse($consumption['start_time']);
+            $consumptionEndTime = Carbon::parse($consumption['end_time']);
+            $consumptionDay = $consumptionStartTime->format('l'); // Get the day of the week
+            $consumptionStartTimeOnly = $consumptionStartTime->format('H:i:s'); // Extract the time of consumption
+            $consumptionEndTimeOnly = $consumptionEndTime->format('H:i:s');
+
+            foreach ($chargeSubCategory->period->periodDetails as $periodDetail) {
+                // Decode the JSON string of days into an array
+                $days = json_decode($periodDetail->days);
+
+                // Check if the day of the consumption is within the period's defined days
+                if (in_array($consumptionDay, $days)) {
+                    $periodStartTime = Carbon::createFromFormat('H:i:s', $periodDetail->start_time);
+                    $periodEndTime = Carbon::createFromFormat('H:i:s', $periodDetail->end_time);
+
+                    // Handle the case where the period crosses midnight
+                    if ($periodStartTime > $periodEndTime) {
+                        // Period that crosses midnight (e.g., 20:00 to 14:00)
+                        if (
+                            ($consumptionStartTimeOnly >= $periodStartTime->format('H:i:s') ||
+                            $consumptionStartTimeOnly <= $periodEndTime->format('H:i:s'))
+                        ) {
+                            $totalUsage += $consumption['usage'];
+                        }
+                    } else {
+                        // Standard period within the same day (e.g., 14:00 to 20:00)
+                        if (
+                            $consumptionStartTimeOnly >= $periodStartTime->format('H:i:s') &&
+                            $consumptionEndTimeOnly <= $periodEndTime->format('H:i:s')
+                        ) {
+                            $totalUsage += $consumption['usage'];
+                        }
+                    }
+                }
+            }
+        }
+
+        Log::info($chargeSubCategory->name, ['total_usage' => $totalUsage]);
+        // return $calculation;
+    }
+
+
 }
