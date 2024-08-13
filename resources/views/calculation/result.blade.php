@@ -39,15 +39,15 @@
                             $chargeCategory = $calculations->first()->chargeSubCategory->chargeCategory;
                         @endphp
                         <h6 class="bg-light p-2 rounded">{{ $chargeCategory->name }}</h6>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover mt-3">
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered table-hover">
                                 <thead class="thead-dark">
                                     <tr>
-                                        <th class="text-center">Description</th>
-                                        <th class="text-center">Usage</th>
-                                        <th class="text-center">Loss Factor</th>
-                                        <th class="text-center">Unit Price</th>
-                                        <th class="text-center">Total Price</th>
+                                        <th class="text-center text-nowrap">Description</th>
+                                        <th class="text-center text-nowrap">Usage</th>
+                                        <th class="text-center text-nowrap">Loss Factor</th>
+                                        <th class="text-center text-nowrap">Unit Price</th>
+                                        <th class="text-center text-nowrap">Total Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -56,7 +56,7 @@
                                             $totalPriceForRatePlan += $calculation->total_price; // Tambahkan total_price ke total
                                         @endphp
                                         <tr>
-                                            <td>{{ $calculation->chargeSubCategory->name }}</td>
+                                            <td class="text-nowrap">{{ $calculation->chargeSubCategory->name }}</td>
                                             <td class="text-end">{{ number_format($calculation->total_usage, 6) }}</td>
                                             <td class="text-end">{{ $calculation->loss_factor }}</td>
                                             <td class="text-end">{{ $calculation->unit_price  }}</td>
