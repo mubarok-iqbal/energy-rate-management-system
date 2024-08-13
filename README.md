@@ -70,8 +70,9 @@ Start the Laravel development server:
 
 ```bash
 php artisan serve
-Visit http://localhost:8000 in your browser to view the application.
 ```
+
+Visit http://localhost:8000 in your browser to view the application.
 
 
 ### Accessing the Application
