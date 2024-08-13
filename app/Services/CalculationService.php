@@ -88,7 +88,7 @@ class CalculationService
                     }
                 }
             }
-            dd('m');
+
             DB::commit(); // Commit transaksi jika semua operasi berhasil
 
         } catch (\Exception $e) {
@@ -212,64 +212,6 @@ class CalculationService
         return $hourlyConsumptions;
     }
 
-    protected function calculateFixPerDay2($calculation, $hourlyConsumptions)
-    {
-        // Retrieve the charge sub category and unit prices
-        $chargeSubCategory = $calculation->chargeSubCategory;
-        $unitPrices = $chargeSubCategory->unitPrices->sortBy('threshold');
-
-        // Initialize variables
-        $dailyUsage = 0;
-        $totalPrice = 0;
-        $previousThreshold = 0;
-
-        // Aggregate hourly consumption per day
-        $dailyConsumptions = $hourlyConsumptions->groupBy(function ($item) {
-            return Carbon::parse($item['start_time'])->toDateString();
-        });
-
-        foreach ($dailyConsumptions as $day => $consumptions) {
-            $dailyUsage = $consumptions->sum('usage');
-            $price = 0;
-
-            foreach ($unitPrices as $unitPrice) {
-                $threshold = $unitPrice->threshold;
-                $pricePerUnit = $unitPrice->price;
-
-                // Calculate price based on threshold
-                if ($dailyUsage > $threshold) {
-                    // Price for usage up to the threshold
-                    $usageAtThreshold = $threshold - $previousThreshold;
-                    $price += $usageAtThreshold * $pricePerUnit;
-
-                    // Update daily usage and previous threshold for the next threshold
-                    $dailyUsage -= $usageAtThreshold;
-                    $previousThreshold = $threshold;
-                } else {
-                    // Price for remaining usage within the threshold
-                    $price += $dailyUsage * $pricePerUnit;
-                    $dailyUsage = 0;
-                    break;
-                }
-            }
-
-            // Ensure to add remaining dailyUsage if there are more unitPrices
-            if ($dailyUsage > 0) {
-                $price += $dailyUsage * $pricePerUnit;
-            }
-
-            // Update calculation record
-            $calculation->total_usage += $consumptions->sum('usage');
-            $calculation->total_price += $price;
-
-            // Reset for the next day
-            $previousThreshold = 0;
-        }
-
-        // Save the updated calculation
-        $calculation->save();
-    }
-
     protected function calculateFixPerDay($calculationRatePlan, $chargeSubCategory, $startDate, $endDate)
     {
         // Convert startDate and endDate to Carbon instances
@@ -281,6 +223,7 @@ class CalculationService
 
         // Retrieve the first unit price
         $unitPrice = $chargeSubCategory->unitPrices->first()->price;
+
 
         // Create or update the calculation record
         $calculation = Calculation::updateOrCreate(
@@ -332,38 +275,36 @@ class CalculationService
     protected function calculatePeriod($calculationRatePlan, $chargeSubCategory, $hourlyConsumptions, $startDate, $endDate)
     {
         $totalUsage = 0;
-        dd($chargeSubCategory->unitPrices);
-        foreach ($hourlyConsumptions as $consumption) {
-            $consumptionStartTime = Carbon::parse($consumption['start_time']);
-            $consumptionEndTime = Carbon::parse($consumption['end_time']);
-            $consumptionDay = $consumptionStartTime->format('l'); // Get the day of the week
-            $consumptionStartTimeOnly = $consumptionStartTime->format('H:i:s'); // Extract the time of consumption
-            $consumptionEndTimeOnly = $consumptionEndTime->format('H:i:s');
 
+        // Loop through hourly consumptions and calculate total usage
+        foreach ($hourlyConsumptions as $consumption) {
             foreach ($chargeSubCategory->period->periodDetails as $periodDetail) {
                 // Decode the JSON string of days into an array
                 $days = json_decode($periodDetail->days);
+
+                // Extract date and time components from consumption
+                $consumptionDate = Carbon::parse($consumption['start_time'])->format('Y-m-d');
+                $consumptionDay = Carbon::parse($consumption['start_time'])->format('l');
+                $consumptionTime = Carbon::parse($consumption['start_time'])->format('H:i:s');
 
                 // Check if the day of the consumption is within the period's defined days
                 if (in_array($consumptionDay, $days)) {
                     $periodStartTime = Carbon::createFromFormat('H:i:s', $periodDetail->start_time);
                     $periodEndTime = Carbon::createFromFormat('H:i:s', $periodDetail->end_time);
 
-                    // Handle the case where the period crosses midnight
+                    // Check if the period crosses midnight
                     if ($periodStartTime > $periodEndTime) {
-                        // Period that crosses midnight (e.g., 20:00 to 14:00)
+                        // Handle the case where the period crosses midnight
                         if (
-                            ($consumptionStartTimeOnly >= $periodStartTime->format('H:i:s') ||
-                            $consumptionStartTimeOnly <= $periodEndTime->format('H:i:s'))
+                            ($consumptionTime >= $periodStartTime->format('H:i:s') ||
+                            $consumptionTime <= $periodEndTime->format('H:i:s'))
                         ) {
                             $totalUsage += $consumption['usage'];
                         }
                     } else {
-                        // Standard period within the same day (e.g., 14:00 to 20:00)
-                        if (
-                            $consumptionStartTimeOnly >= $periodStartTime->format('H:i:s') &&
-                            $consumptionEndTimeOnly <= $periodEndTime->format('H:i:s')
-                        ) {
+                        // Standard period within the same day
+                        if ($consumptionTime >= $periodStartTime->format('H:i:s') &&
+                            $consumptionTime <= $periodEndTime->format('H:i:s')) {
                             $totalUsage += $consumption['usage'];
                         }
                     }
@@ -371,9 +312,38 @@ class CalculationService
             }
         }
 
-        Log::info($chargeSubCategory->name, ['total_usage' => $totalUsage]);
-        // return $calculation;
+        // Retrieve the first unit price
+        $unitPrice = $chargeSubCategory->unitPrices->first()->price;
+
+        // Check for loss factor
+        $lossFactor = $chargeSubCategory->loss_factor;
+
+
+        // Calculate total price considering the loss factor
+        $totalPrice = $totalUsage * $unitPrice;
+
+        if ($lossFactor !== null) {
+            $totalPrice *= $lossFactor;
+        }
+        // dd($totalPrice , $lossFactor);
+
+        // Update or create the calculation record
+        $calculation = Calculation::updateOrCreate(
+            [
+                'calculation_rate_plan_id' => $calculationRatePlan->id,
+                'charge_sub_category_id' => $chargeSubCategory->id,
+            ],
+            [
+                'total_usage' => $totalUsage,
+                'total_price' => $totalPrice,
+                'unit_price' => $unitPrice,
+                'loss_factor' => $lossFactor,
+            ]
+        );
+
+        return $calculation;
     }
+
 
 
 }

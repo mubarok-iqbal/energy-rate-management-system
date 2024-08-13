@@ -31,6 +31,9 @@
                 </div>
 
                 <div class="card-body">
+                    @php
+                        $totalPriceForRatePlan = 0; // Variabel untuk menyimpan total price
+                    @endphp
                     @foreach($ratePlan->calculationsGrouped as $chargeCategoryId => $calculations)
                         @php
                             $chargeCategory = $calculations->first()->chargeSubCategory->chargeCategory;
@@ -39,26 +42,38 @@
                         <table class="table table-bordered table-hover mt-3">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>Description</th>
-                                    <th>Usage</th>
-                                    <th>Loss Factor</th>
-                                    <th>Unit Price</th>
-                                    <th>Total Price</th>
+                                    <th class="text-center">Description</th>
+                                    <th class="text-center">Usage</th>
+                                    <th class="text-center">Loss Factor</th>
+                                    <th class="text-center">Unit Price</th>
+                                    <th class="text-center">Total Price</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($calculations as $calculation)
+                                    @php
+                                        $totalPriceForRatePlan += $calculation->total_price; // Tambahkan total_price ke total
+                                    @endphp
                                     <tr>
                                         <td>{{ $calculation->chargeSubCategory->name }}</td>
-                                        <td>{{ number_format($calculation->total_usage, 6) }}</td>
-                                        <td>{{ $calculation->lossFactor }}</td>
-                                        <td>{{ $calculation->unit_price  }}</td>
-                                        <td>{{ number_format($calculation->total_price, 6) }}</td>
+                                        <td class="text-end">{{ number_format($calculation->total_usage, 6) }}</td>
+                                        <td class="text-end">{{ $calculation->loss_factor }}</td>
+                                        <td class="text-end">{{ $calculation->unit_price  }}</td>
+                                        <td class="text-end">{{ number_format($calculation->total_price, 6) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     @endforeach
+                    <div class="mt-3 d-flex justify-content-between w-100">
+                        <div>
+                            <span class="h5">Total Price for {{ $ratePlan->ratePlan->name }}:</span>
+                        </div>
+                        <div>
+                            <span class="h5">{{ number_format($totalPriceForRatePlan, 6) }}</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         @endforeach
@@ -66,9 +81,8 @@
         <div class="alert alert-warning" role="alert">
             No calculation results found.
         </div>
-
-        <!-- Tombol Back -->
     @endif
+
     <div class="mt-4">
         <a href="{{ url('/') }}" class="btn btn-success">
             Back
