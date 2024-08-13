@@ -23,6 +23,7 @@ class ChargeSubCategorySeeder extends Seeder
         $winter = Season::where('name', 'winter')->first();
         $summer = Season::where('name', 'summer')->first();
 
+        //Enegergy Charge - Daily Charge
         $dailyCharge = ChargeSubCategory::create([
             'charge_category_id' => 1,
             'name' => 'Daily Charge',
@@ -64,6 +65,35 @@ class ChargeSubCategorySeeder extends Seeder
             'price' => 0.077990,
         ]);
 
+        //Metering Charge
+        $meteingCharge = ChargeSubCategory::create([
+            'charge_category_id' => 2,
+            'name' => 'Metering Charge',
+            'calculation_type_id' => $fixPerDay->id,
+            'season_id' => null,
+            'period_id' => null,
+        ]);
+
+        UnitPrice::create([
+            'charge_sub_category_id' => $meteingCharge->id,
+            'price' => 4.794521
+        ]);
+
+        //Network Charge
+        $netwrokCharge = ChargeSubCategory::create([
+            'charge_category_id' => 3,
+            'name' => 'Network Charge',
+            'calculation_type_id' => $fixPerDay->id,
+            'season_id' => null,
+            'period_id' => null,
+        ]);
+
+        UnitPrice::create([
+            'charge_sub_category_id' => $netwrokCharge->id,
+            'price' => 3.288
+        ]);
+
+        //summer demand dan witner demand
         $summerDemand = ChargeSubCategory::create([
             'charge_category_id' => 4,
             'name' => 'Summer Demand (KW/Mth)',
@@ -77,7 +107,7 @@ class ChargeSubCategorySeeder extends Seeder
             'price' => 15.7,
         ]);
 
-        $summerDemand = ChargeSubCategory::create([
+        $winterDemand = ChargeSubCategory::create([
             'charge_category_id' => 4,
             'name' => 'Winter Demand (KW/Mth)',
             'calculation_type_id' => $fixPerMonth->id,
@@ -86,7 +116,7 @@ class ChargeSubCategorySeeder extends Seeder
         ]);
 
         UnitPrice::create([
-            'charge_sub_category_id' => $summerDemand->id,
+            'charge_sub_category_id' => $winterDemand->id,
             'price' => 17,
         ]);
     }

@@ -51,8 +51,8 @@
                                     <tr>
                                         <td>{{ $calculation->chargeSubCategory->name }}</td>
                                         <td>{{ number_format($calculation->total_usage, 6) }}</td>
-                                        <td>{{ $calculation->chargeSubCategory->lossFactor }}</td>
-                                        <td>{{ $calculation->chargeSubCategory->calculation_type_id == 1 ? $calculation->chargeSubCategory->unitPrices->first()->price : '-' }}</td>
+                                        <td>{{ $calculation->lossFactor }}</td>
+                                        <td>{{ $calculation->unit_price  }}</td>
                                         <td>{{ number_format($calculation->total_price, 6) }}</td>
                                     </tr>
                                 @endforeach

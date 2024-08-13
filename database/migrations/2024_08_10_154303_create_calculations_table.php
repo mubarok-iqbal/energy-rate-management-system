@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('calculation_rate_plan_id')->constrained()->onDelete('cascade');
             $table->foreignId('charge_sub_category_id')->constrained()->onDelete('cascade');
             $table->float('total_usage');
+            $table->float('loss_factor')->nullable();
+            $table->float('unit_price');
             $table->float('total_price');
             $table->timestamps();
         });

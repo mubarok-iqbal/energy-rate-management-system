@@ -74,6 +74,10 @@ class CalculationService
                             // Calculate FIX_PER_DAY
                             $this->calculateFixPerDay($calculationRatePlan , $chargeSubCategory , $startDate , $endDate);
                         }
+
+                        if ($chargeSubCategory->calculation_type_id == CalculationType::FIX_PER_MONTH) {
+                            $this->calculateFixPerMonth($calculationRatePlan , $chargeSubCategory , $hourlyConsumptions);
+                        }
                     }
                 }
             }
@@ -280,6 +284,33 @@ class CalculationService
             [
                 'total_usage' => $totalUsage,
                 'total_price' => $totalUsage * $unitPrice,
+                'unit_price' => $unitPrice,
+            ]
+        );
+
+        return $calculation;
+    }
+
+    protected function calculateFixPerMonth($calculationRatePlan, $chargeSubCategory, $hourlyConsumptions)
+    {
+
+        // Find the maximum usage from the hourly consumptions
+        $totalUsage = collect($hourlyConsumptions)->max('usage');
+
+
+        // Retrieve the first unit price
+        $unitPrice = $chargeSubCategory->unitPrices->first()->price;
+
+        // Create or update the calculation record
+        $calculation = Calculation::firstOrCreate(
+            [
+                'calculation_rate_plan_id' => $calculationRatePlan->id,
+                'charge_sub_category_id' => $chargeSubCategory->id,
+            ],
+            [
+                'total_usage' => $totalUsage,
+                'total_price' => $totalUsage * $unitPrice,
+                'unit_price' => $unitPrice,
             ]
         );
 
