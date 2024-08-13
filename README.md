@@ -8,7 +8,7 @@ This project simulates the calculation of total energy usage and total price ove
 
 ### Prerequisites
 
-- PHP >= 8.0
+- PHP >= 8.2
 - Composer
 - MySQL or PostgreSQL
 
