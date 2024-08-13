@@ -39,31 +39,33 @@
                             $chargeCategory = $calculations->first()->chargeSubCategory->chargeCategory;
                         @endphp
                         <h6 class="bg-light p-2 rounded">{{ $chargeCategory->name }}</h6>
-                        <table class="table table-bordered table-hover mt-3">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th class="text-center">Description</th>
-                                    <th class="text-center">Usage</th>
-                                    <th class="text-center">Loss Factor</th>
-                                    <th class="text-center">Unit Price</th>
-                                    <th class="text-center">Total Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($calculations as $calculation)
-                                    @php
-                                        $totalPriceForRatePlan += $calculation->total_price; // Tambahkan total_price ke total
-                                    @endphp
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mt-3">
+                                <thead class="thead-dark">
                                     <tr>
-                                        <td>{{ $calculation->chargeSubCategory->name }}</td>
-                                        <td class="text-end">{{ number_format($calculation->total_usage, 6) }}</td>
-                                        <td class="text-end">{{ $calculation->loss_factor }}</td>
-                                        <td class="text-end">{{ $calculation->unit_price  }}</td>
-                                        <td class="text-end">{{ number_format($calculation->total_price, 6) }}</td>
+                                        <th class="text-center">Description</th>
+                                        <th class="text-center">Usage</th>
+                                        <th class="text-center">Loss Factor</th>
+                                        <th class="text-center">Unit Price</th>
+                                        <th class="text-center">Total Price</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($calculations as $calculation)
+                                        @php
+                                            $totalPriceForRatePlan += $calculation->total_price; // Tambahkan total_price ke total
+                                        @endphp
+                                        <tr>
+                                            <td>{{ $calculation->chargeSubCategory->name }}</td>
+                                            <td class="text-end">{{ number_format($calculation->total_usage, 6) }}</td>
+                                            <td class="text-end">{{ $calculation->loss_factor }}</td>
+                                            <td class="text-end">{{ $calculation->unit_price  }}</td>
+                                            <td class="text-end">{{ number_format($calculation->total_price, 6) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endforeach
                     <div class="mt-3 d-flex justify-content-between w-100">
                         <div>
