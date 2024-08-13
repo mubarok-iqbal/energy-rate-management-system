@@ -50,8 +50,6 @@ DB_PASSWORD=your_database_password
 php artisan key:generate
 ```
 
-Update your .env file with the necessary environment configurations, including database settings, mail settings, and any other required configuration.
-
 ### Migrate and Seed the Database
 
 Run migrations to create the database schema:
